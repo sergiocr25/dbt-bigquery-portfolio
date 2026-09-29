@@ -24,3 +24,7 @@ models:
     03_gold:
       +dataset: dbt_gold
       +materialized: table
+
+    04_practice:
+      +dataset: dbt_practice
+      +tags: ["practice"]
