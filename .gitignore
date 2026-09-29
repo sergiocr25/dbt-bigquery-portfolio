@@ -1,6 +1,13 @@
 .venv/
 target/
-dbt_packages/
 logs/
-.env
+dbt_packages/
+
 profiles.yml
+.user.yml
+
+__pycache__/
+*.pyc
+
+.DS_Store
+Thumbs.db
