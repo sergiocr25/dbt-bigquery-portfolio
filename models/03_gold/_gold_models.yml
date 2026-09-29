@@ -1,21 +1,14 @@
 version: 2
 
 models:
-  - name: int_order_payments
+  - name: fct_orders
     columns:
       - name: order_id
         data_tests:
           - unique
           - not_null
 
-  - name: int_orders_enriched
-    columns:
-      - name: order_id
-        data_tests:
-          - unique
-          - not_null
-
-  - name: int_customer_order_metrics
+  - name: dim_customer
     columns:
       - name: customer_id
         data_tests:
