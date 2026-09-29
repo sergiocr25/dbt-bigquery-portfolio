@@ -1,0 +1,78 @@
+version: 2
+
+sources:
+  - name: jaffle_shop
+    database: dbt-tutorial
+    schema: jaffle_shop
+
+    tables:
+      - name: customers
+        columns:
+          - name: id
+            data_tests:
+              - unique
+              - not_null
+
+      - name: orders
+        columns:
+          - name: id
+            data_tests:
+              - unique
+              - not_null
+
+          - name: user_id
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('jaffle_shop', 'customers')
+                    field: id
+
+          - name: status
+            data_tests:
+              - accepted_values:
+                  arguments:
+                    values:
+                      - placed
+                      - shipped
+                      - returned
+                      - completed
+                      - return_pending
+
+  - name: stripe
+    database: dbt-tutorial
+    schema: stripe
+
+    tables:
+      - name: payment
+        columns:
+          - name: id
+            data_tests:
+              - unique
+              - not_null
+
+          - name: orderid
+            data_tests:
+              - not_null
+              - relationships:
+                  arguments:
+                    to: source('jaffle_shop', 'orders')
+                    field: id
+
+          - name: paymentmethod
+            data_tests:
+              - accepted_values:
+                  arguments:
+                    values:
+                      - credit_card
+                      - bank_transfer
+                      - coupon
+                      - gift_card
+
+          - name: status
+            data_tests:
+              - accepted_values:
+                  arguments:
+                    values:
+                      - success
+                      - fail

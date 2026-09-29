@@ -3,3 +3,24 @@ version: '1.0.0'
 config-version: 2
 
 profile: 'dbt_bigquery_portfolio'
+ 
+model-paths: ["models"]
+macro-paths: ["macros"]
+ 
+clean-targets:
+  - "target"
+  - "dbt_packages"
+ 
+models:
+  dbt_bigquery_portfolio:
+    01_bronze:
+      +dataset: dbt_bronze
+      +materialized: table
+
+    02_silver:
+      +dataset: dbt_silver
+      +materialized: table
+
+    03_gold:
+      +dataset: dbt_gold
+      +materialized: table
