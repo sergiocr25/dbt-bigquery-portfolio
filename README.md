@@ -6,7 +6,7 @@ The project transforms raw Jaffle Shop and Stripe data through a layered archite
 
 **Source → Bronze → Silver → Gold**
 
-The goal is to demonstrate practical analytics engineering concepts including data modeling, testing, reusable macros, grain management, joins, aggregations, dimensional modeling, BigQuery optimization, and incremental processing.
+The goal is to demonstrate practical analytics engineering concepts including data modeling, testing, reusable macros, grain management, joins, aggregations, dimensional modeling, BigQuery optimization, incremental processing, and basic CI automation with GitHub Actions.
 
 ---
 
@@ -18,9 +18,9 @@ The goal is to demonstrate practical analytics engineering concepts including da
 | **BigQuery** | Cloud data warehouse |
 | **SQL** | Data transformation and modeling |
 | **Jinja** | Reusable transformation logic |
-| **Git / GitHub** | Version control |
+| **Git / GitHub** | Version control and CI workflows |
 | **VS Code** | Development environment |
-| **Python** | Local dbt environment |
+| **Python** | Local and CI dbt environment |
 
 ---
 
@@ -44,13 +44,16 @@ An additional isolated practice layer is used to experiment with more advanced d
 
 ```text
 Core Architecture
+
 01_bronze
     ↓
 02_silver
     ↓
 03_gold
 
+
 Advanced Practice
+
 04_practice
 ```
 
@@ -527,7 +530,7 @@ dbt-bigquery-portfolio/
 └── requirements.txt
 ```
 
-The GitHub Actions workflow directory is included as a foundation for future CI/CD practice.
+A GitHub Actions workflow is included to reproduce the Python/dbt environment on a GitHub-hosted runner.
 
 ---
 
@@ -605,6 +608,88 @@ dbt run -s fct_orders_incremental
 
 ---
 
+## GitHub Actions
+
+The project includes a GitHub Actions workflow located at:
+
+```text
+.github/workflows/dbt_job.yml
+```
+
+The workflow is triggered manually from the GitHub Actions interface using:
+
+```yaml
+on:
+  workflow_dispatch:
+```
+
+This makes it possible to launch the workflow manually without executing it automatically on every push.
+
+### Workflow process
+
+```text
+Run workflow
+    ↓
+Create temporary GitHub-hosted Ubuntu runner
+    ↓
+Checkout repository
+    ↓
+Set up Python 3.13
+    ↓
+Install dependencies from requirements.txt
+    ↓
+Verify dbt installation
+    ↓
+Complete job
+```
+
+The workflow currently contains the following job:
+
+```yaml
+name: dbt Job
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dbt-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check dbt installation
+        run: dbt --version
+```
+
+This validates that the project environment can be reproduced successfully outside the local development machine.
+
+The GitHub-hosted runner:
+
+- Downloads the repository
+- Creates a clean temporary environment
+- Configures Python
+- Installs the dbt dependencies
+- Verifies the dbt installation
+- Is automatically discarded after the job finishes
+
+The workflow currently validates the environment but does **not** execute `dbt build`.
+
+BigQuery authentication credentials are intentionally kept outside the Git repository.
+
+A future improvement is to securely provide BigQuery authentication to the workflow through environment variables and secret management, allowing GitHub Actions to execute the full dbt pipeline.
+
+---
+
 ## Environment
 
 The project was developed using:
@@ -612,9 +697,10 @@ The project was developed using:
 - **dbt Core:** 1.12.5
 - **dbt-bigquery:** 1.12.1
 - **Google BigQuery**
-- **Python**
+- **Python 3.13**
 - **VS Code**
 - **Git / GitHub**
+- **GitHub Actions**
 
 Authentication credentials and local dbt profile configuration are intentionally excluded from version control.
 
@@ -676,3 +762,9 @@ Credential management using environment variables and a secret management soluti
 - Isolated experimental models
 - End-to-end dbt builds
 - Data lineage visualization
+- GitHub Actions
+- GitHub-hosted runners
+- Manual workflow triggers
+- Automated dependency installation
+- Reproducible dbt environments
+- Separation of credentials from source control
