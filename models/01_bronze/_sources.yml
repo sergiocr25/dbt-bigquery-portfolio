@@ -30,6 +30,7 @@ sources:
 
           - name: status
             data_tests:
+              - not_null
               - accepted_values:
                   arguments:
                     values:
@@ -38,6 +39,14 @@ sources:
                       - returned
                       - completed
                       - return_pending
+
+          - name: order_date
+            data_tests:
+              - not_null
+
+          - name: _etl_loaded_at
+            data_tests:
+              - not_null
 
   - name: stripe
     database: dbt-tutorial
@@ -61,6 +70,7 @@ sources:
 
           - name: paymentmethod
             data_tests:
+              - not_null
               - accepted_values:
                   arguments:
                     values:
@@ -71,8 +81,21 @@ sources:
 
           - name: status
             data_tests:
+              - not_null
               - accepted_values:
                   arguments:
                     values:
                       - success
                       - fail
+
+          - name: amount
+            data_tests:
+              - not_null
+
+          - name: created
+            data_tests:
+              - not_null
+
+          - name: _batched_at
+            data_tests:
+              - not_null
