@@ -6,7 +6,7 @@ The project transforms raw Jaffle Shop and Stripe data through a layered archite
 
 **Source → Bronze → Silver → Gold**
 
-The goal is to demonstrate practical analytics engineering concepts including data modeling, testing, reusable macros, grain management, joins, aggregations, dimensional modeling, BigQuery optimization, incremental processing, and basic CI automation with GitHub Actions.
+The goal is to demonstrate practical analytics engineering concepts including data modeling, testing, reusable macros, grain management, joins, aggregations, dimensional modeling, BigQuery optimization, incremental processing, environment-based configuration, and basic CI automation with GitHub Actions.
 
 ---
 
@@ -17,7 +17,7 @@ The goal is to demonstrate practical analytics engineering concepts including da
 | **dbt Core** | Data transformation, modeling and testing |
 | **BigQuery** | Cloud data warehouse |
 | **SQL** | Data transformation and modeling |
-| **Jinja** | Reusable transformation logic |
+| **Jinja** | Reusable transformation logic and environment variables |
 | **Git / GitHub** | Version control and CI workflows |
 | **VS Code** | Development environment |
 | **Python** | Local and CI dbt environment |
@@ -468,6 +468,63 @@ The model is therefore retained as an implementation and learning exercise demon
 
 ---
 
+## Environment Configuration
+
+The project uses environment variables to separate local configuration from version-controlled dbt configuration.
+
+The tracked `profiles.yml` file uses dbt's `env_var()` function:
+
+```yaml
+dbt_bigquery_portfolio:
+  target: dev
+
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+      dataset: "{{ env_var('DBT_BIGQUERY_DATASET') }}"
+      threads: 4
+      keyfile: "{{ env_var('DBT_BIGQUERY_KEYFILE') }}"
+      location: US
+```
+
+Local values are stored in a `.env` file.
+
+Example:
+
+```env
+DBT_BIGQUERY_PROJECT=dbt-bigquery-portfolio-510011
+DBT_BIGQUERY_DATASET=analytics_dev
+DBT_BIGQUERY_KEYFILE=C:/path/to/local/service-account-key.json
+```
+
+The `.env` file is excluded from version control through `.gitignore`.
+
+The service account JSON credential is also stored outside the repository.
+
+This approach keeps `profiles.yml` reproducible and visible in GitHub while keeping machine-specific values and credentials outside source control.
+
+### Secret management
+
+Google Secret Manager was evaluated as a possible next step for centralized secret management.
+
+It is not currently used in this personal portfolio project because enabling Secret Manager requires billing to be enabled on the Google Cloud project.
+
+The current implementation therefore uses:
+
+```text
+profiles.yml
+      ↓
+env_var()
+      ↓
+local .env
+      ↓
+service account JSON stored outside the repository
+```
+
+---
+
 ## Project Structure
 
 ```text
@@ -526,11 +583,12 @@ dbt-bigquery-portfolio/
 │
 ├── .gitignore
 ├── dbt_project.yml
+├── profiles.yml
 ├── README.md
 └── requirements.txt
 ```
 
-A GitHub Actions workflow is included to reproduce the Python/dbt environment on a GitHub-hosted runner.
+The local `.env` file and service account credentials are intentionally excluded from the repository.
 
 ---
 
@@ -541,6 +599,18 @@ A GitHub Actions workflow is included to reproduce the Python/dbt environment on
 ```bash
 pip install -r requirements.txt
 ```
+
+### Configure local environment variables
+
+Create a local `.env` file containing the required environment-specific values:
+
+```env
+DBT_BIGQUERY_PROJECT=your-project-id
+DBT_BIGQUERY_DATASET=your-development-dataset
+DBT_BIGQUERY_KEYFILE=C:/path/to/your/service-account-key.json
+```
+
+The `.env` file must not be committed to Git.
 
 ### Check the dbt connection
 
@@ -684,9 +754,9 @@ The GitHub-hosted runner:
 
 The workflow currently validates the environment but does **not** execute `dbt build`.
 
-BigQuery authentication credentials are intentionally kept outside the Git repository.
+The `.env` file and BigQuery service account credentials are intentionally not stored in GitHub.
 
-A future improvement is to securely provide BigQuery authentication to the workflow through environment variables and secret management, allowing GitHub Actions to execute the full dbt pipeline.
+A possible future improvement would be to provide GitHub Actions with secure BigQuery authentication through a dedicated secret-management or workload identity solution, allowing the CI workflow to execute the full dbt pipeline.
 
 ---
 
@@ -702,11 +772,14 @@ The project was developed using:
 - **Git / GitHub**
 - **GitHub Actions**
 
-Authentication credentials and local dbt profile configuration are intentionally excluded from version control.
+Local dbt configuration is managed through:
 
-The local environment uses a `profiles.yml` file that is ignored by Git.
+- A version-controlled `profiles.yml`
+- dbt `env_var()` references
+- A local `.env` file excluded from Git
+- A service account JSON credential stored outside the repository
 
-Credential management using environment variables and a secret management solution is planned as a future improvement.
+This separates reproducible dbt configuration from local and sensitive values.
 
 ---
 
@@ -720,6 +793,8 @@ Credential management using environment variables and a secret management soluti
 - `ref()`
 - Dependency management
 - Jinja
+- `env_var()`
+- Environment-based configuration
 - Custom macros
 - Generic tests
 - Singular tests
@@ -758,6 +833,8 @@ Credential management using environment variables and a secret management soluti
 - Git-based development
 - GitHub version control
 - Reproducible Python dependencies
+- Environment variables
+- Separation of configuration and credentials
 - Project documentation
 - Isolated experimental models
 - End-to-end dbt builds

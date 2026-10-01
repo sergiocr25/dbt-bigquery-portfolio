@@ -1,0 +1,12 @@
+dbt_bigquery_portfolio:
+  target: dev
+
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+      dataset: "{{ env_var('DBT_BIGQUERY_DATASET') }}"
+      threads: 4
+      keyfile: "{{ env_var('DBT_BIGQUERY_KEYFILE') }}"
+      location: US
